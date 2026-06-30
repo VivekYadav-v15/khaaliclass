@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 // Bypass the pool entirely and use the DIRECT_URL that we know works perfectly!
 // Bypass the pool entirely and use the DIRECT_URL that we know works perfectly!
 const prisma = new PrismaClient({
+  // @ts-ignore
   datasources: {
     db: {
       url: process.env.DIRECT_URL!, // <-- Add the exclamation mark right here
