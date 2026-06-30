@@ -1,0 +1,13 @@
+{
+  "nodes": {
+    "node_gate1": { "id": "node_gate1", "coordinates": [77.0385, 28.6100], "name": "Main Gate 1" },
+    "node_admin": { "id": "node_admin", "coordinates": [77.0396, 28.6096], "name": "Admin Block Intersection" },
+    "node_canteen": { "id": "node_canteen", "coordinates": [77.0410, 28.6105], "name": "Shopping Complex / Canteen" },
+    "node_bh1": { "id": "node_bh1", "coordinates": [77.0425, 28.6112], "name": "Boys Hostel 1" }
+  },
+  "edges": [
+    { "source": "node_gate1", "target": "node_admin", "weight": 130 },
+    { "source": "node_admin", "target": "node_canteen", "weight": 180 },
+    { "source": "node_canteen", "target": "node_bh1", "weight": 160 }
+  ]
+}

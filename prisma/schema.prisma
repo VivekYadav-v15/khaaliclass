@@ -1,0 +1,160 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// --------------------------------------
+// 1. KHAALICLASS USER ROLES & AUTH
+// --------------------------------------
+
+enum Role {
+  STUDENT
+  CR
+  ADMIN
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(STUDENT) 
+  crRequested   Boolean   @default(false) // NEW: Tracks if they clicked "Apply for CR"
+  accounts      Account[]
+  sessions      Session[]
+  auditLogs     AuditLog[]     // NEW: Relation to actions they perform
+  overrides     RoomOverride[] // NEW: Relation to room changes they make
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// --------------------------------------
+// 2. KHAALICLASS APP DATA MODELS
+// --------------------------------------
+
+model Room {
+  id        String         @id @default(cuid())
+  name      String         @unique // e.g., "Block 5 - 501"
+  building  String
+  latitude  Float
+  longitude Float
+  capacity  Int
+  floor     String
+  status    String         @default("AVAILABLE") // "AVAILABLE", "OCCUPIED"
+  reports   Report[]
+  schedules Schedule[]
+  overrides RoomOverride[] // <-- ADD THIS EXACT LINE
+  updatedAt DateTime       @updatedAt
+}
+
+model Schedule {
+  id        String   @id @default(cuid())
+  roomId    String   
+  room      Room     @relation(fields: [roomId], references: [id])
+  dayOfWeek Int      // 0 (Sunday) to 6 (Saturday)
+  startTime String   // "09:00"
+  endTime   String   // "10:00"
+  course    String
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  roomId    String   
+  room      Room     @relation(fields: [roomId], references: [id])
+  userId    String   // Anonymized device ID or hashed user session
+  status    String   // "AVAILABLE", "OCCUPIED"
+  trusted   Boolean  @default(false)
+  timestamp DateTime @default(now())
+}
+
+// --------------------------------------
+// 3. KHAALICLASS MANAGEMENT MODELS
+// --------------------------------------
+
+// Tracks temporary date-specific changes made by CRs
+model RoomOverride {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  date      DateTime // The specific date chosen on the calendar
+  startTime String   // "14:00"
+  endTime   String   // "16:00"
+  status    String   // "AVAILABLE" or "OCCUPIED"
+  reason    String?  // e.g., "Extra Class", "Professor Absent"
+  crId      String   // The ID of the CR who made the change
+  user      User     @relation(fields: [crId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// The Admin Paper Trail
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   // e.g., "CR_APPROVED", "ROOM_OVERRIDE"
+  details   String   // e.g., "Marked Block 5 - 501 as OCCUPIED for Extra Class"
+  timestamp DateTime @default(now())
+}
+
+// ------------------------------------------------------
+// 4. SHADOW FILTER & CR LOGS
+// ------------------------------------------------------
+
+// Tracks all authoritative changes made by trusted users
+model CRAuditLog {
+  id          String   @id @default(cuid())
+  userName    String   // E.g., "Admin" or the CR's name/ID
+  roomName    String   // E.g., "Block 5 - 102"
+  action      String   // E.g., "Marked OCCUPIED"
+  timestamp   DateTime @default(now())
+}
+
+// Catches crowdsourced reports and flags them based on GPS
+model StudentSuggestion {
+  id              String   @id @default(cuid())
+  roomName        String   
+  reportedStatus  String   
+  distanceMeters  Float    
+  isValidated     Boolean  
+  userName        String?  @default("Anonymous Student") // <-- ADD THIS LINE
+  timestamp       DateTime @default(now())
+}
+
