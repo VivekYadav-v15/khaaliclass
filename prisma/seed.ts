@@ -1,3 +1,15 @@
+// @ts-nocheck
+import 'dotenv/config';
+import { PrismaClient } from '@prisma/client';
+
+// Bypass the pool entirely and use the DIRECT_URL that we know works perfectly!
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DIRECT_URL!, 
+    },
+  }
+})
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 
