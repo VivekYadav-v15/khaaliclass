@@ -32,9 +32,9 @@ export default function CampusNavigator() {
       });
 
       // Init map
-      map.current = leaflet.map(mapContainer.current!, {
-        zoomControl: false // Optional: hide default zoom controls for cleaner look
-      }).setView([28.6096, 77.0396], 15.5);
+      map.current = leaflet.map(mapContainer.current as unknown as HTMLElement, {
+  zoomControl: false 
+}).setView([28.6096, 77.0396], 15.5);
 
       // Add free Dark Mode tiles (CartoDB Dark Matter)
       leaflet.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
