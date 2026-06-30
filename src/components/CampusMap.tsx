@@ -871,9 +871,8 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
           const bRooms = dbRooms.filter(r => r.building === building.name || r.name.includes(building.name));
           
           // If it's a live building, use DB data. If not, use the fallback dummy data.
-          const liveTotal = isLiveBuilding ? bRooms.length : (building.totalRooms || 0);
-          const liveAvailable = isLiveBuilding ? bRooms.filter(r => r.status === 'AVAILABLE').length : (building.availableRooms || 0);
-
+        const total = isLiveBuilding ? (bRooms as any[]).length : ((building as any).totalRooms || 0);
+        const available = isLiveBuilding ? (bRooms as any[]).filter((r: any) => r.status === 'AVAILABLE').length : ((building as any).availableRooms || 0);
           return (
             <Polygon 
               key={building.name}
@@ -884,18 +883,18 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                 fillOpacity: isDarkMode ? 0.35 : 0.5, 
                 weight: 2 
               }}
-              eventHandlers={{
+                            eventHandlers={{
                 click: () => {
-                  setSelectedBuilding(building);
-                  onSelectBlock(building.name);
+                  setSelectedBuilding(building as any);
+                  onSelectBlock((building as any).name);
                 },
-                mouseover: (e) => {
+                mouseover: (e: any) => {
                   if (!selectedBuilding) {
-                    setHoveredBuilding(building);
+                    setHoveredBuilding(building as any);
                     setMousePos({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
                   }
                 },
-                mousemove: (e) => {
+                mousemove: (e: any) => {
                   if (!selectedBuilding) setMousePos({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
                 },
                 mouseout: () => setHoveredBuilding(null)
@@ -913,7 +912,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                   
                   {/* 🔴 THE DYNAMIC DOT */}
                   <div 
-                    className={`w-3.5 h-3.5 mt-0.5 rounded-full border-2 ${isDarkMode ? 'border-[#18181b]' : 'border-white'} shadow-sm ${getDotColor(liveAvailable, liveTotal)}`}
+                    className={`w-3.5 h-3.5 mt-0.5 rounded-full border-2 ${isDarkMode ? 'border-[#18181b]' : 'border-white'} shadow-sm ${getDotColor(available, total)}`}
                   />
                 </div>
               </Tooltip>
