@@ -32,7 +32,7 @@ export default function CampusNavigator() {
       });
 
       // Init map
-      map.current = leaflet.map(mapContainer.current, {
+      map.current = leaflet.map(mapContainer.current!, {
         zoomControl: false // Optional: hide default zoom controls for cleaner look
       }).setView([28.6096, 77.0396], 15.5);
 
