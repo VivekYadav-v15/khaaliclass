@@ -598,8 +598,8 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
   ];
   
   const getDotColor = (available?: number, total?: number) => {
-    if (total === undefined || total === 0) return 'bg-zinc-400'; 
-    if (available === 0) return 'bg-rose-500';
+        if (total === undefined || total === 0) return 'bg-zinc-400'; 
+    if (available === undefined || available === 0) return 'bg-rose-500';
     if (available >= total / 2) return 'bg-emerald-500';
     return 'bg-amber-500';
   };
