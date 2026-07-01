@@ -1,3 +1,4 @@
+import AutoRefresh from "@/components/AutoRefresh";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
@@ -99,6 +100,9 @@ export default async function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-6 md:p-10 font-sans relative pb-20">
+            {/* 📡 THE INVISIBLE DASHBOARD RADAR */}
+      <AutoRefresh />
+      
       
       {/* Floating Back Button (Bottom Left) */}
       <Link 
