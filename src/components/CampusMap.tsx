@@ -38,7 +38,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
   const [isMounted, setIsMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false); 
 
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [hasApplied, setHasApplied] = useState(false);
 
   const hasCRPowers = session && ((session.user as any)?.role === 'CR' || (session.user as any)?.role === 'ADMIN');
@@ -88,6 +88,35 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
     const interval = setInterval(fetchRooms, 10000);
     return () => clearInterval(interval);
   }, []); // <-- Empty array means it runs on mount!
+    // --- 🕵️ SILENT BACKGROUND ROLE SYNC ---
+  useEffect(() => {
+    // Don't run if they aren't logged in
+    if (!session?.user?.email) return;
+
+    const checkRole = async () => {
+      try {
+        const res = await fetch('/api/auth/role', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          const currentCookieRole = (session.user as any).role;
+          
+          // If the DB role is different from the Cookie role...
+          if (data.role && data.role !== currentCookieRole) {
+            console.log(`Role change detected! Syncing from ${currentCookieRole} to ${data.role}`);
+            
+            // Instantly rewrite their cookie and update the UI without logging out!
+            await update({ role: data.role });
+          }
+        }
+      } catch (error) {
+        console.error("Background role sync failed", error);
+      }
+    };
+
+    // Check the DB every 15 seconds in the background
+    const roleInterval = setInterval(checkRole, 15000);
+    return () => clearInterval(roleInterval);
+  }, [session, update]); 
 
         // --- INSTANT LOCAL FILTERING (Bulletproof + APJ Floor Fix) ---
   const displayRooms = dbRooms.filter((room) => 
@@ -1123,12 +1152,27 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                             const nextStatus = room.status === 'AVAILABLE' ? 'OCCUPIED' : 'AVAILABLE';
                             setDbRooms(prev => prev.map(r => r.id === room.id ? { ...r, status: nextStatus } : r));
 
-                            try {
-                              await fetch('/api/rooms/report', {
+                                                        try {
+                              const res = await fetch('/api/rooms/report', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ roomId: room.id, status: nextStatus }),
                               });
+
+                              // 🛡️ THE BOUNCER TRAP STARTS HERE
+                              if (res.status === 403) {
+                                const data = await res.json();
+                                if (data.roleChanged) {
+                                  alert("Access Denied: Your permissions have changed.");
+                                  await update({ role: "STUDENT" });
+                                  
+                                  // Revert the fake optimistic UI update
+                                  setDbRooms(prev => prev.map(r => r.id === room.id ? { ...r, status: room.status } : r));
+                                  return;
+                                }
+                              }
+                              // 🛡️ THE BOUNCER TRAP ENDS HERE
+                              
                             } catch (err) {
                               console.error("Failed to update status", err);
                             }

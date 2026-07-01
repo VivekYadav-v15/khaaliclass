@@ -36,7 +36,8 @@ export const authOptions: NextAuthOptions = {
       return false;
     },
     
-    async jwt({ token, user }) {
+    // Notice we added 'trigger' and 'session' to the parameters here
+    async jwt({ token, user, trigger, session }) {
       // Step 1: Pass the user role from the database into the secure token
       if (user) {
         // Hardcode your master admin access
@@ -47,6 +48,17 @@ export const authOptions: NextAuthOptions = {
           token.role = (user as any).role || 'STUDENT'; 
         }
       }
+
+      // THE MAGIC: Allow the frontend to update the token
+      if (trigger === "update" && session?.role) {
+        // Security check: Protect Vivek's master admin status from being overwritten by a frontend update
+        if (token.email === 'vivek.yadav.ug24@nsut.ac.in') {
+          token.role = 'ADMIN';
+        } else {
+          token.role = session.role;
+        }
+      }
+
       return token;
     },
 

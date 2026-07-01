@@ -8,4 +8,4 @@ export default function KhaliClassDashboard() {
       <CampusMap onSelectBlock={(block) => console.log("Block selected:", block)} />
     </main>
   );
-}
+} 
