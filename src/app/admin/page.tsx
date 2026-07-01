@@ -21,6 +21,15 @@ async function manageUserRole(formData: FormData) {
     where: { email: adminSession.user?.email! },
   });
 
+  // 1. FIRST, grab the target user's details so we know their actual name!
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true }
+  });
+  
+  const targetName = targetUser?.name || "Anonymous User";
+
+  // 2. NOW we run the transactions using their real name in the details
   if (action === "APPROVE_CR") {
     await prisma.$transaction([
       prisma.user.update({
@@ -31,7 +40,7 @@ async function manageUserRole(formData: FormData) {
         data: {
           userId: currentAdmin!.id,
           action: "CR_APPROVED",
-          details: `Approved User ID: ${userId} to CR status`,
+          details: `Approved ${targetName} to CR status`,
         },
       }),
     ]);
@@ -45,7 +54,7 @@ async function manageUserRole(formData: FormData) {
         data: {
           userId: currentAdmin!.id,
           action: "CR_REJECTED",
-          details: `Rejected CR request for User ID: ${userId}`,
+          details: `Rejected CR request for ${targetName}`,
         },
       }),
     ]);
@@ -59,7 +68,7 @@ async function manageUserRole(formData: FormData) {
         data: {
           userId: currentAdmin!.id,
           action: "CR_DEMOTED",
-          details: `Demoted User ID: ${userId} back to STUDENT`,
+          details: `Demoted ${targetName} back to STUDENT`,
         },
       }),
     ]);
@@ -240,8 +249,13 @@ export default async function AdminDashboard() {
                         {log.user.name || "System Admin"}
                       </span>
                       <span className="text-[10px] text-gray-500 shrink-0 font-mono">
-                        {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+  {new Date(log.timestamp).toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata', // Forces Indian Standard Time
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  })}
+</span>
                     </div>
                     <div className="mb-1">
                       <span className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-mono uppercase tracking-tight ${
