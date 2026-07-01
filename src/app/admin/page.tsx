@@ -58,11 +58,11 @@ async function manageUserRole(formData: FormData) {
         },
       }),
     ]);
-  } else if (action === "DEMOTE_CR") {
+    } else if (action === "DEMOTE_CR") {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: userId },
-        data: { role: "STUDENT" },
+        data: { role: "STUDENT", crRequested: false }, // ✅ Wipes out ghost requests instantly!
       }),
       prisma.auditLog.create({
         data: {

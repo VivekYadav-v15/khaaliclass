@@ -41,6 +41,13 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
   const { data: session, update } = useSession();
   const [hasApplied, setHasApplied] = useState(false);
 
+    // 🧹 NEW: Clear the 'hasApplied' memory if their role actually changes to CR/ADMIN
+  useEffect(() => {
+    if (session && ((session.user as any)?.role === 'CR' || (session.user as any)?.role === 'ADMIN')) {
+      setHasApplied(false);
+    }
+  }, [session]);
+
   const hasCRPowers = session && ((session.user as any)?.role === 'CR' || (session.user as any)?.role === 'ADMIN');
 
   const [hoveredBuilding, setHoveredBuilding] = useState<any | null>(null);
