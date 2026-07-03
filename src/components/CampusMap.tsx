@@ -38,6 +38,13 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
   });
   const [isMounted, setIsMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false); 
+    // 💾 Check local storage when the map first loads to remember dark mode
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('khaaliclass-theme');
+    if (savedTheme !== null) {
+      setIsDarkMode(savedTheme === 'dark');
+    }
+  }, []);
 
   const { data: session, update } = useSession();
   const [hasApplied, setHasApplied] = useState(false);
@@ -139,7 +146,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
   const displayRooms = dbRooms.filter((room) => 
     selectedBuilding && 
     (room.building === selectedBuilding.name || room.name.includes(selectedBuilding.name)) && 
-    (selectedBuilding.name === 'APJ Complex' || room.floor === selectedFloor) && // 🛡️ APJ ignores the floor state!
+    (selectedBuilding.name === 'APJ' || room.floor === selectedFloor) && // 🛡️ APJ ignores the floor state!
     room.status === selectedStatus
   );
 
@@ -201,7 +208,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
       ]
     },
     {
-      name: 'Students Centre',
+      name: 'Canteen(SC)',
       color: '#f59e0b', 
       image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1000&auto=format&fit=crop', 
       availableRooms: 0, 
@@ -526,7 +533,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
       ]
     },
     {
-      name: 'College Fountain',
+      name: 'Fountain',
       color: '#3b82f6', 
       image: 'https://images.unsplash.com/photo-1549887552-cb11158b4ecf?q=80&w=1000&auto=format&fit=crop', 
       availableRooms: 0, 
@@ -551,7 +558,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
       ]
     },
     {
-      name: 'APJ Complex',
+      name: 'APJ',
       color: '#3b82f6',
       image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1000&auto=format&fit=crop', 
       availableRooms: 2,
@@ -615,7 +622,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
       ]
     },
     {
-      name: 'Block 8A Connecting Block',
+      name: '8A Connecting Block',
       color: isDarkMode ? '#52525b' : '#71717a',
       coords: [
         [28.6097278, 77.0378515], [28.6097694, 77.0380216], [28.6097406, 77.0380336], [28.6097575, 77.0381009],
@@ -834,7 +841,11 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
 
         {/* Existing Dark Mode Button */}
         <button 
-          onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={() => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode); // Update the screen
+    localStorage.setItem('khaaliclass-theme', newMode ? 'dark' : 'light'); // Save to browser memory
+  }}
           className={`p-3 rounded-xl shadow-lg transition-colors flex items-center justify-center ${isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-amber-400' : 'bg-white hover:bg-gray-100 text-blue-500'}`}
         >
           {isDarkMode ? (
@@ -861,16 +872,16 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         )}
       </div>
 
-                  {/* 🎨 THE DARK MODE CSS TRICK */}
+                        {/* 🎨 THE DARK MODE CSS TRICK */}
       <style>{`
         .dark-map-tiles {
-          /* 🔥 Boosted brightness to 105% and dropped contrast to 75% for a smooth grey! */
-          filter: invert(100%) hue-rotate(180deg) brightness(105%) contrast(75%);
+          /* 🔥 Cranked brightness to 160% and dropped contrast to 70% to force a true grey! */
+          filter: invert(100%) hue-rotate(180deg) brightness(160%) contrast(70%);
           transition: filter 0.3s ease;
         }
       `}</style>
 
-      <MapContainer 
+            <MapContainer 
         ref={mapRef} 
         center={[28.6100, 77.0382]}
         zoom={17.5}
@@ -878,39 +889,41 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         maxZoom={19}   
         maxBounds={campusBounds} 
         maxBoundsViscosity={1.0} 
-        /* Changed map background from #18181b to #27272a (zinc-800) */
-        style={{ height: '100%', width: '100%', backgroundColor: isDarkMode ? '#27272a' : '#f4f4f5' }}
+        style={{ height: '100%', width: '100%', backgroundColor: isDarkMode ? '#18181b' : '#f4f4f5' }}
         zoomControl={false} 
       >
         <TileLayer 
           url={tileUrl}
-          className={isDarkMode ? 'dark-map-tiles' : ''}
+          /* 🗑️ Removed the dark-map-tiles className */
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           maxNativeZoom={19} 
           maxZoom={22}       
         />
 
+        {/* THE OUTSIDE OF THE CAMPUS */}
         <GeoJSON 
           data={worldMask as any} 
           style={{
-            /* 🔥 NO MORE PITCH BLACK! Changed #000000 to #27272a (smooth zinc-800 grey) */
-            fillColor: isDarkMode ? '#27272a' : '#ffffff', 
+            /* Black outside for Dark Mode, White outside for Light Mode */
+            fillColor: isDarkMode ? '#000000' : '#ffffff', 
             fillOpacity: 0.8,                              
             stroke: false                                  
           }}
         />
 
+        {/* THE INSIDE OF THE CAMPUS */}
         <GeoJSON 
           data={nsutBoundary as any} 
           style={{
-            /* Lightened the NSUT border slightly so it pops against the new grey background */
-            color: isDarkMode ? '#71717a' : '#000000',     
+            color: isDarkMode ? '#52525b' : '#000000',     
             weight: 3, 
-            fill: false,
-            fillOpacity: 0,                                          
-            fillColor: 'transparent',                      
+            fill: isDarkMode ? true : false,
+            /* 🔥 THE MAGIC FIX: A tiny 6% white overlay turns the pitch-black map into the perfect smooth grey! */
+            fillOpacity: isDarkMode ? 0.06 : 0,                                          
+            fillColor: isDarkMode ? '#ffffff' : 'transparent',                      
           }}
         />
+
 
         {userLocation && startPoint === 'gps' && (
           <CircleMarker 
@@ -930,7 +943,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
           
                 {allBuildings.map((building) => {
           // 🧮 LIVE MAP MATH: Sync the dots with the database!
-          const isLiveBuilding = building.name === 'Block 5' || building.name === 'APJ Complex';
+          const isLiveBuilding = building.name === 'Block 5' || building.name === 'APJ';
           const bRooms = dbRooms.filter(r => r.building === building.name || r.name.includes(building.name));
           
           // If it's a live building, use DB data. If not, use the fallback dummy data.
@@ -989,7 +1002,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
       {/* ============================================================== */}
       {hoveredBuilding && hoveredBuilding.image && (() => {
         // 🧮 LIVE TOOLTIP MATH!
-        const isLiveHover = hoveredBuilding.name === 'Block 5' || hoveredBuilding.name === 'APJ Complex';
+        const isLiveHover = hoveredBuilding.name === 'Block 5' || hoveredBuilding.name === 'APJ';
         const hRooms = dbRooms.filter(r => r.building === hoveredBuilding.name || r.name.includes(hoveredBuilding.name));
         
         const hoverTotal = isLiveHover ? hRooms.length : (hoveredBuilding.totalRooms || 0);
@@ -1060,7 +1073,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
 
             {/* 📸 IMAGE & LIVE MATH HEADER */}
             {selectedBuilding.image && (() => {
-              const isLiveBuilding = selectedBuilding.name === 'Block 5' || selectedBuilding.name === 'APJ Complex';
+              const isLiveBuilding = selectedBuilding.name === 'Block 5' || selectedBuilding.name === 'APJ';
               const buildingDbRooms = dbRooms.filter((r) => r.building === selectedBuilding.name || r.name.includes(selectedBuilding.name));
               
               const total = isLiveBuilding ? buildingDbRooms.length : (selectedBuilding.totalRooms || 0);
@@ -1094,7 +1107,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
             })()}
 
             {/* --- STICKY FILTERS (Only for Live Buildings) --- */}
-            {(selectedBuilding.name === 'Block 5' || selectedBuilding.name === 'APJ Complex') && (
+            {(selectedBuilding.name === 'Block 5' || selectedBuilding.name === 'APJ') && (
               <div className={`sticky top-[73px] z-10 p-4 border-b shadow-sm ${isDarkMode ? 'bg-zinc-900/95 border-zinc-800' : 'bg-white/95 border-zinc-200'} backdrop-blur-md flex flex-col gap-3`}>
                 
                 {/* 🏢 DYNAMIC FLOOR BUTTONS */}
@@ -1104,7 +1117,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                       key={floor}
                       onClick={() => setSelectedFloor(floor)}
                       className={`flex-1 py-1.5 text-xs font-semibold rounded-md border transition-all ${
-                        (selectedFloor === floor || selectedBuilding.name === 'APJ Complex') // Force highlight for APJ
+                        (selectedFloor === floor || selectedBuilding.name === 'APJ') // Force highlight for APJ
                           ? 'bg-blue-500 text-white border-blue-600 shadow-md' 
                           : isDarkMode ? 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-600 border-zinc-200 hover:bg-zinc-200'
                       }`}
@@ -1142,7 +1155,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
 
             <div className="p-4 flex flex-col gap-3">
               {/* THE DYNAMIC ROOM LIST (Block 5 & APJ) */}
-              {(selectedBuilding.name === 'Block 5' || selectedBuilding.name === 'APJ Complex') ? (
+              {(selectedBuilding.name === 'Block 5' || selectedBuilding.name === 'APJ') ? (
                 isLoadingRooms ? (
                   <div className="text-center py-10 text-zinc-500 animate-pulse">Scanning {selectedFloor} Floor...</div>
                 ) : displayRooms.length === 0 ? (
@@ -1223,9 +1236,18 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                         >
                           Mark as {room.status === 'AVAILABLE' ? '🔴 Occupied' : '🟢 Free'}
                         </button>
-                      ) : (
+                                            ) : (
                         <button 
-                          onClick={() => setFishyRoom(room)}
+                          onClick={() => {
+                            // 🛑 Check if they are logged in first!
+                            if (!session?.user) {
+                              setSelectedBuilding(null); // Slides sidebar away
+                              setShowLoginPrompt(true);  // Triggers bouncing arrow
+                            } else {
+                              // ✅ They are logged in (Student), open the report modal
+                              setFishyRoom(room);
+                            }
+                          }}
                           className={`w-full py-2 text-xs font-medium border rounded transition-all ${
                             isDarkMode 
                               ? 'text-zinc-500 border-zinc-800 hover:text-amber-400 hover:bg-amber-400/10 hover:border-amber-900' 
