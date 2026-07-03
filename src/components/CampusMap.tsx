@@ -7,6 +7,7 @@ import Link from "next/link";
 import nsutBoundary from '@/data/nsutBoundary.json';
 import { useEffect, useState, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, GeoJSON, useMapEvents } from 'react-leaflet';
 import UserMenu from "@/components/UserMenu";
 
 // Helper function to calculate distance between two coordinates in meters
@@ -25,7 +26,17 @@ function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: num
   return R * c; 
 }
 
+// 🧭 The standalone Zoom Tracker (MUST BE OUTSIDE CampusMap!)
+function MapZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+  useMapEvents({
+    zoom: (e) => onZoomChange(e.target.getZoom()),
+    zoomend: (e) => onZoomChange(e.target.getZoom()),
+  });
+  return null;
+}
+
 export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: string) => void }) {
+// ... rest of your code ...
 
   
     // Temporary state to hold live room statuses
@@ -73,6 +84,9 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
 
     // Add this right below your other state variables (around line 25)
   const [fishyRoom, setFishyRoom] = useState<any>(null);
+    // 1. Add this state near your other states
+  const [currentZoom, setCurrentZoom] = useState(17.5);
+    
 
   // --- ROUTING STATE & REFS ---
   const mapRef = useRef<any>(null);
@@ -108,6 +122,14 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
 
     fetchRooms(); // Run immediately on load
 
+    const MapZoomTracker = () => {
+    useMapEvents({
+      zoomend: (e) => {
+        setCurrentZoom(e.target.getZoom());
+      },
+    });
+    return null;
+  };
     // 🔄 Keep the map perfectly in sync every 10 seconds!
     const interval = setInterval(fetchRooms, 10000);
     return () => clearInterval(interval);
@@ -892,7 +914,10 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         maxBoundsViscosity={0.5} /* 👈 THE FIX: Changed from 1.0. This makes the map boundary feel like a bouncy rubber band instead of a hard brick wall. */
         style={{ height: '100%', width: '100%', backgroundColor: isDarkMode ? '#18181b' : '#f4f4f5' }}
         zoomControl={false} 
+        
       >
+        <MapZoomTracker onZoomChange={setCurrentZoom} /> {/* 👈 Now it properly sends the live zoom to the map! */}
+                
         <TileLayer 
           url={tileUrl}
           /* 🗑️ Removed the dark-map-tiles className */
@@ -977,20 +1002,25 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                 mouseout: () => setHoveredBuilding(null)
               }}
             >
-              <Tooltip 
+                                          <Tooltip 
                 permanent 
                 direction="center" 
                 className="!bg-transparent !border-none !shadow-none !p-0 pointer-events-none"
               >
                 <div className="flex flex-col items-center justify-center -mt-4">
-                  <span className={`font-bold text-[13px] whitespace-nowrap ${isDarkMode ? 'text-zinc-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]' : 'text-zinc-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]'}`}>
-                    {building.name}
-                  </span>
                   
-                  {/* 🔴 THE DYNAMIC DOT */}
+                  {/* 🔥 THE NUCLEAR FIX: React will literally delete the text if zoomed out! */}
+                  {currentZoom >= 16.8 && (
+                    <span className={`font-bold text-[13px] whitespace-nowrap transition-all duration-200 ${isDarkMode ? 'text-zinc-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]' : 'text-zinc-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]'}`}>
+                      {building.name}
+                    </span>
+                  )}
+                  
+                  {/* 🔴 THE DYNAMIC DOT (This stays visible so you still see building statuses) */}
                   <div 
-                    className={`w-3.5 h-3.5 mt-0.5 rounded-full border-2 ${isDarkMode ? 'border-[#18181b]' : 'border-white'} shadow-sm ${getDotColor(available, total)}`}
+                    className={`w-3.5 h-3.5 rounded-full border-2 ${isDarkMode ? 'border-[#18181b]' : 'border-white'} shadow-sm ${getDotColor(available, total)} ${currentZoom >= 16.8 ? 'mt-0.5' : 'mt-2'}`}
                   />
+                  
                 </div>
               </Tooltip>
             </Polygon>
