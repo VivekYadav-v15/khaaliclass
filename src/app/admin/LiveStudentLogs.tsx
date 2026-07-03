@@ -35,7 +35,7 @@ export default function LiveStudentLogs() {
     <section className="bg-gray-800 border border-gray-700/50 rounded-xl overflow-hidden shadow-md h-fit max-h-[400px] flex flex-col">
       <div className="px-5 py-4 bg-gray-800/50 border-b border-gray-700 flex justify-between items-center">
         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <span className="text-amber-500">🕵️</span> Student Reports
+          <span className="text-amber-500"></span> Student Reports
         </h2>
         <span className="text-[10px] text-gray-400 font-mono tracking-wider">SHADOW FILTER</span>
       </div>

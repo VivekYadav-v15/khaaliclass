@@ -7,7 +7,7 @@
 //   const { data: session, status, update } = useSession();
 //   const [message, setMessage] = useState("");
 
-//   // 🕵️ DEBUGGING: This will print your session to the browser console so we can see your exact role
+//   //  DEBUGGING: This will print your session to the browser console so we can see your exact role
 //   console.log("Current Session Data:", session);
 
 //   const handleAdminAction = async () => {

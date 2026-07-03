@@ -112,7 +112,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
     const interval = setInterval(fetchRooms, 10000);
     return () => clearInterval(interval);
   }, []); // <-- Empty array means it runs on mount!
-    // --- 🕵️ SILENT BACKGROUND ROLE SYNC ---
+    // --- SILENT BACKGROUND ROLE SYNC ---
   useEffect(() => {
     // Don't run if they aren't logged in
     if (!session?.user?.email) return;
@@ -160,9 +160,10 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
   
   const { MapContainer, TileLayer, Polygon, Tooltip, GeoJSON, CircleMarker } = require('react-leaflet');
   
-  const campusBounds = [
-    [28.6075, 77.0340], 
-    [28.6140, 77.0415]  
+     // Snug boundaries to perfectly frame the NSUT campus without floating into the void
+  const campusBounds: L.LatLngBoundsExpression = [
+    [28.6020, 77.0300], // South-West Corner (Bottom Left)
+    [28.6170, 77.0450]  // North-East Corner (Top Right)
   ];
 
   const activeBuildings = [
@@ -881,14 +882,14 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         }
       `}</style>
 
-            <MapContainer 
+                  <MapContainer 
         ref={mapRef} 
         center={[28.6100, 77.0382]}
         zoom={17.5}
-        minZoom={16.5} 
+        minZoom={16} /* 👈 THE FIX: Lowered from 16.5. This lets you zoom out WAY more! */
         maxZoom={19}   
         maxBounds={campusBounds} 
-        maxBoundsViscosity={1.0} 
+        maxBoundsViscosity={0.5} /* 👈 THE FIX: Changed from 1.0. This makes the map boundary feel like a bouncy rubber band instead of a hard brick wall. */
         style={{ height: '100%', width: '100%', backgroundColor: isDarkMode ? '#18181b' : '#f4f4f5' }}
         zoomControl={false} 
       >
@@ -1254,11 +1255,11 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                               : 'text-zinc-500 border-zinc-200 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-300'
                           }`}
                         >
-                          🤔 Something fishy?? Put your correction
+                           Something fishy?? Put your correction
                         </button>
                       )}
 
-                      {/* 📅 NEW BUTTON: View Full Schedule (Protected) */}
+                      {/* NEW BUTTON: View Full Schedule (Protected) */}
                       {session?.user ? (
                         <Link 
                           href={`/room/${room.id}`}
@@ -1268,7 +1269,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                               : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
                           }`}
                         >
-                          📅 View Full Schedule
+                           View Full Schedule
                         </Link>
                       ) : (
                         <button 
@@ -1282,7 +1283,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                               : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
                           }`}
                         >
-                          📅 View Full Schedule
+                          View Full Schedule
                         </button>
                       )}
                       
