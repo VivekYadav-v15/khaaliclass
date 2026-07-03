@@ -3,6 +3,7 @@
 import { updateRoomStatus } from "@/actions/roomActions";
 import { useSession } from "next-auth/react";
 import { applyForCR } from "@/actions/userActions";
+import Link from "next/link";
 import nsutBoundary from '@/data/nsutBoundary.json';
 import { useEffect, useState, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
@@ -40,6 +41,15 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
 
   const { data: session, update } = useSession();
   const [hasApplied, setHasApplied] = useState(false);
+    const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  // Auto-hide the login prompt after 4 seconds
+  useEffect(() => {
+    if (showLoginPrompt) {
+      const timer = setTimeout(() => setShowLoginPrompt(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showLoginPrompt]);
 
     // 🧹 NEW: Clear the 'hasApplied' memory if their role actually changes to CR/ADMIN
   useEffect(() => {
@@ -834,8 +844,21 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
           )}
         </button>
         
-        {/* Your User Profile Menu */}
+                {/* Your User Profile Menu */}
         <UserMenu />
+
+        {/* 👆 THE BOUNCING LOGIN REMINDER */}
+        {showLoginPrompt && (
+          <div className="absolute top-[110%] right-0 mt-4 flex flex-col items-end animate-bounce z-[9999]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 drop-shadow-lg mb-1 mr-3">
+              <path d="M12 19V5"/>
+              <path d="m5 12 7-7 7 7"/>
+            </svg>
+            <div className="bg-amber-400 text-amber-950 px-4 py-2 rounded-xl font-bold text-sm shadow-xl shadow-amber-500/20 whitespace-nowrap border-2 border-amber-300">
+              Hey! Sign in first to see the schedule!
+            </div>
+          </div>
+        )}
       </div>
 
             {/* 🎨 THE DARK MODE CSS TRICK */}
@@ -1152,14 +1175,14 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                         )}
                       </div>
 
-                      {/* ACTION BUTTONS */}
+                                            {/* ACTION BUTTONS */}
                       {hasCRPowers ? (
                         <button 
                           onClick={async () => {
                             const nextStatus = room.status === 'AVAILABLE' ? 'OCCUPIED' : 'AVAILABLE';
                             setDbRooms(prev => prev.map(r => r.id === room.id ? { ...r, status: nextStatus } : r));
 
-                                                        try {
+                            try {
                               const res = await fetch('/api/rooms/report', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -1208,6 +1231,36 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
                           🤔 Something fishy?? Put your correction
                         </button>
                       )}
+
+                      {/* 📅 NEW BUTTON: View Full Schedule (Protected) */}
+                      {session?.user ? (
+                        <Link 
+                          href={`/room/${room.id}`}
+                          className={`w-full py-2 mt-2 text-center block text-xs font-bold uppercase tracking-wider border rounded transition-colors ${
+                            isDarkMode 
+                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20'
+                              : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
+                          }`}
+                        >
+                          📅 View Full Schedule
+                        </Link>
+                      ) : (
+                        <button 
+                          onClick={() => {
+                            setSelectedBuilding(null); // 🚪 Slides the sidebar away
+                            setShowLoginPrompt(true);  // 👆 Triggers the bouncing arrow
+                          }}
+                          className={`w-full py-2 mt-2 text-center block text-xs font-bold uppercase tracking-wider border rounded transition-colors ${
+                            isDarkMode 
+                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20'
+                              : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
+                          }`}
+                        >
+                          📅 View Full Schedule
+                        </button>
+                      )}
+                      
+                      
                     </div>
                   ))
                 )
