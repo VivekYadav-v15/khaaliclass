@@ -744,7 +744,7 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
   };
 
   return (
-    <div className={`relative w-full h-screen ${isDarkMode ? 'bg-zinc-900' : 'bg-zinc-50'}`}>
+    <div className={`relative w-full h-screen ${isDarkMode ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
       
       {/* ---HIDDEN FLOATING ROUTING PANEL --- */}
       <div className={`hidden absolute top-6 left-6 z-[1000] w-72 backdrop-blur-md p-4 rounded-xl shadow-xl border transition-colors ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700' : 'bg-white/90 border-zinc-200'}`}>
