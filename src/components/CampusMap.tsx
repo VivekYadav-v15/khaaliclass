@@ -861,10 +861,11 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         )}
       </div>
 
-            {/* 🎨 THE DARK MODE CSS TRICK */}
+                  {/* 🎨 THE DARK MODE CSS TRICK */}
       <style>{`
         .dark-map-tiles {
-          filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(85%);
+          /* 🔥 Boosted brightness to 105% and dropped contrast to 75% for a smooth grey! */
+          filter: invert(100%) hue-rotate(180deg) brightness(105%) contrast(75%);
           transition: filter 0.3s ease;
         }
       `}</style>
@@ -877,7 +878,8 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         maxZoom={19}   
         maxBounds={campusBounds} 
         maxBoundsViscosity={1.0} 
-        style={{ height: '100%', width: '100%', backgroundColor: isDarkMode ? '#18181b' : '#f4f4f5' }}
+        /* Changed map background from #18181b to #27272a (zinc-800) */
+        style={{ height: '100%', width: '100%', backgroundColor: isDarkMode ? '#27272a' : '#f4f4f5' }}
         zoomControl={false} 
       >
         <TileLayer 
@@ -891,8 +893,9 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         <GeoJSON 
           data={worldMask as any} 
           style={{
-            fillColor: isDarkMode ? '#000000' : '#ffffff', 
-            fillOpacity: 0.6,                              
+            /* 🔥 NO MORE PITCH BLACK! Changed #000000 to #27272a (smooth zinc-800 grey) */
+            fillColor: isDarkMode ? '#27272a' : '#ffffff', 
+            fillOpacity: 0.8,                              
             stroke: false                                  
           }}
         />
@@ -900,7 +903,8 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         <GeoJSON 
           data={nsutBoundary as any} 
           style={{
-            color: isDarkMode ? '#52525b' : '#000000',     
+            /* Lightened the NSUT border slightly so it pops against the new grey background */
+            color: isDarkMode ? '#71717a' : '#000000',     
             weight: 3, 
             fill: false,
             fillOpacity: 0,                                          
