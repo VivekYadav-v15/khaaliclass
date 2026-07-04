@@ -26,11 +26,26 @@ function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: num
   return R * c; 
 }
 
-// 🧭 The standalone Zoom Tracker (MUST BE OUTSIDE CampusMap!)
+// 🧭 The Standalone Zoom Tracker (Now highly optimized for mobile!)
 function MapZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+  const lastZoomRef = useRef(17.5); // Keeps track without causing re-renders!
+
   useMapEvents({
-    zoom: (e) => onZoomChange(e.target.getZoom()),
-    zoomend: (e) => onZoomChange(e.target.getZoom()),
+    zoom: (e) => {
+      const currentZoom = e.target.getZoom();
+      const wasVisible = lastZoomRef.current >= 16.8;
+      const isVisible = currentZoom >= 16.8;
+      
+      // 🔥 ONLY trigger a heavy React re-render if the text visibility actually changes!
+      if (wasVisible !== isVisible) {
+        lastZoomRef.current = currentZoom;
+        onZoomChange(currentZoom);
+      }
+    },
+    zoomend: (e) => {
+      lastZoomRef.current = e.target.getZoom();
+      onZoomChange(e.target.getZoom());
+    }
   });
   return null;
 }
@@ -905,13 +920,14 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
       `}</style>
 
 
-                    {/* 👑 BRANDING TITLE (Top Center - Now with Glass & Separator Line!) */}
-      <div className={`absolute top-5 left-1/2 transform -translate-x-1/2 z-[1000] pointer-events-none px-8 py-2 rounded-2xl backdrop-blur-md shadow-sm border-b-2 flex flex-col items-center justify-center transition-all duration-300 ${isDarkMode ? 'bg-zinc-900/60 border-amber-500/70' : 'bg-white/60 border-blue-500/60'}`}>
-        <h1 className={`text-3xl sm:text-4xl font-black tracking-tighter drop-shadow-md transition-colors ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                          {/* 👑 BRANDING TITLE (Top Left) */}
+      <div className={`absolute top-4 left-4 z-[1000] pointer-events-none px-5 py-2 sm:px-8 sm:py-2 rounded-2xl backdrop-blur-md shadow-sm border-b-2 flex flex-col items-center justify-center transition-all duration-300 ${isDarkMode ? 'bg-zinc-900/60 border-amber-500/70' : 'bg-white/60 border-blue-500/60'}`}>
+        <h1 className={`text-2xl sm:text-4xl font-black tracking-tighter drop-shadow-md transition-colors ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
           KHAALI<span className={isDarkMode ? 'text-amber-400' : 'text-blue-600'}>CLASS</span>
         </h1>
       </div>
-                  <MapContainer 
+                          <MapContainer 
+          preferCanvas={true} // 🔥 THE MOBILE SPEED HACK
         ref={mapRef} 
         center={[28.6100, 77.0382]}
         zoom={17.5}
