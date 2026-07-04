@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { applyForCR } from "@/actions/userActions";
 import Link from "next/link";
 import nsutBoundary from '@/data/nsutBoundary.json';
-import { useEffect, useState, useRef } from 'react';
+import React,{ useEffect, useState, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, GeoJSON, useMapEvents } from 'react-leaflet';
 import UserMenu from "@/components/UserMenu";
@@ -904,6 +904,13 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
         }
       `}</style>
 
+
+                    {/* 👑 BRANDING TITLE (Top Center - Now with Glass & Separator Line!) */}
+      <div className={`absolute top-5 left-1/2 transform -translate-x-1/2 z-[1000] pointer-events-none px-8 py-2 rounded-2xl backdrop-blur-md shadow-sm border-b-2 flex flex-col items-center justify-center transition-all duration-300 ${isDarkMode ? 'bg-zinc-900/60 border-amber-500/70' : 'bg-white/60 border-blue-500/60'}`}>
+        <h1 className={`text-3xl sm:text-4xl font-black tracking-tighter drop-shadow-md transition-colors ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+          KHAALI<span className={isDarkMode ? 'text-amber-400' : 'text-blue-600'}>CLASS</span>
+        </h1>
+      </div>
                   <MapContainer 
         ref={mapRef} 
         center={[28.6100, 77.0382]}
@@ -967,63 +974,82 @@ export default function CampusMap({ onSelectBlock }: { onSelectBlock: (block: st
           />
         )}
           
-                {allBuildings.map((building) => {
+                                {allBuildings.map((building) => {
           // 🧮 LIVE MAP MATH: Sync the dots with the database!
           const isLiveBuilding = building.name === 'Block 5' || building.name === 'APJ';
           const bRooms = dbRooms.filter(r => r.building === building.name || r.name.includes(building.name));
           
-          // If it's a live building, use DB data. If not, use the fallback dummy data.
-        const total = isLiveBuilding ? (bRooms as any[]).length : ((building as any).totalRooms || 0);
-        const available = isLiveBuilding ? (bRooms as any[]).filter((r: any) => r.status === 'AVAILABLE').length : ((building as any).availableRooms || 0);
+          const total = isLiveBuilding ? (bRooms as any[]).length : ((building as any).totalRooms || 0);
+          const available = isLiveBuilding ? (bRooms as any[]).filter((r: any) => r.status === 'AVAILABLE').length : ((building as any).availableRooms || 0);
+
+          // Shared click/hover logic
+          const eventHandlers = {
+            click: () => {
+              setSelectedBuilding(building as any);
+              onSelectBlock((building as any).name);
+            },
+            mouseover: (e: any) => {
+              if (!selectedBuilding) {
+                setHoveredBuilding(building as any);
+                setMousePos({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
+              }
+            },
+            mousemove: (e: any) => {
+              if (!selectedBuilding) setMousePos({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
+            },
+            mouseout: () => setHoveredBuilding(null)
+          };
+
           return (
-            <Polygon 
-              key={building.name}
-              positions={building.coords as any} 
-              pathOptions={{ 
-                color: building.color, 
-                fillColor: building.color, 
-                fillOpacity: isDarkMode ? 0.35 : 0.5, 
-                weight: 2 
-              }}
-                            eventHandlers={{
-                click: () => {
-                  setSelectedBuilding(building as any);
-                  onSelectBlock((building as any).name);
-                },
-                mouseover: (e: any) => {
-                  if (!selectedBuilding) {
-                    setHoveredBuilding(building as any);
-                    setMousePos({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
-                  }
-                },
-                mousemove: (e: any) => {
-                  if (!selectedBuilding) setMousePos({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
-                },
-                mouseout: () => setHoveredBuilding(null)
-              }}
-            >
-                                          <Tooltip 
-                permanent 
-                direction="center" 
-                className="!bg-transparent !border-none !shadow-none !p-0 pointer-events-none"
+            <React.Fragment key={building.name}>
+              {/* 👻 THE INVISIBLE HITBOX (Fills donut holes & expands mobile touch area!) */}
+              <Polygon 
+                positions={building.coords as any}
+                pathOptions={{ 
+                  stroke: true,
+                  color: 'transparent',   // Invisible border
+                  weight: 45,             // 🔥 Bleeds 22px of clickable area inward and outward!
+                  fillColor: 'transparent', 
+                  fillOpacity: 0,         // Invisible fill (but still catches clicks)
+                  fillRule: 'nonzero'     // 🔥 Forces the shape to act solid, ignoring courtyard holes
+                }}
+                eventHandlers={eventHandlers}
+              />
+
+              {/* 🏢 THE VISIBLE BUILDING */}
+              <Polygon 
+                positions={building.coords as any} 
+                pathOptions={{ 
+                  color: building.color, 
+                  fillColor: building.color, 
+                  fillOpacity: isDarkMode ? 0.35 : 0.5, 
+                  weight: 2 
+                }}
+                eventHandlers={eventHandlers}
               >
-                <div className="flex flex-col items-center justify-center -mt-4">
-                  
-                  {/* 🔥 THE NUCLEAR FIX: React will literally delete the text if zoomed out! */}
-                  {currentZoom >= 16.8 && (
-                    <span className={`font-bold text-[13px] whitespace-nowrap transition-all duration-200 ${isDarkMode ? 'text-zinc-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]' : 'text-zinc-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]'}`}>
-                      {building.name}
-                    </span>
-                  )}
-                  
-                  {/* 🔴 THE DYNAMIC DOT (This stays visible so you still see building statuses) */}
-                  <div 
-                    className={`w-3.5 h-3.5 rounded-full border-2 ${isDarkMode ? 'border-[#18181b]' : 'border-white'} shadow-sm ${getDotColor(available, total)} ${currentZoom >= 16.8 ? 'mt-0.5' : 'mt-2'}`}
-                  />
-                  
-                </div>
-              </Tooltip>
-            </Polygon>
+                <Tooltip 
+                  permanent 
+                  direction="center" 
+                  className="!bg-transparent !border-none !shadow-none !p-0 pointer-events-none"
+                >
+                  <div className="flex flex-col items-center justify-center -mt-4">
+                    
+                    {/* 🔥 THE NUCLEAR FIX: Text deletes on zoom out */}
+                    {currentZoom >= 16.8 && (
+                      <span className={`font-bold text-[13px] whitespace-nowrap transition-all duration-200 ${isDarkMode ? 'text-zinc-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]' : 'text-zinc-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]'}`}>
+                        {building.name}
+                      </span>
+                    )}
+                    
+                    {/* 🔴 THE DYNAMIC DOT */}
+                    <div 
+                      className={`w-3.5 h-3.5 rounded-full border-2 ${isDarkMode ? 'border-[#18181b]' : 'border-white'} shadow-sm ${getDotColor(available, total)} ${currentZoom >= 16.8 ? 'mt-0.5' : 'mt-2'}`}
+                    />
+                    
+                  </div>
+                </Tooltip>
+              </Polygon>
+            </React.Fragment>
           );
         })}
             </MapContainer>
