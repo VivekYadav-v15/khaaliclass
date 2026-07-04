@@ -28,7 +28,7 @@ export default function RoomControls({ roomId }: { roomId: string }) {
     const currentUrl = window.location.href;
     
     // We inject that dynamic URL right into the message
-    const message = `📚 Check out the ${selectedCohort} weekly timetable on KhaaliClass! \n\nSee full schedule: ${currentUrl}`;
+    const message = `Check out the ${selectedCohort} weekly timetable on KhaaliClass! \n\nSee full schedule: ${currentUrl}`;
     
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
