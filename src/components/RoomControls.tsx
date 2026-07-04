@@ -23,14 +23,17 @@ export default function RoomControls({ roomId }: { roomId: string }) {
     "IT (1st Year) - Sec 2"
   ];
 
-    const handleShareTimetable = () => {
-    // Updated to use the correct Vercel deployment URL
-    const message = `📚 Check out the ${selectedCohort} weekly timetable for Room ${roomId} on KhaaliClass! \n\nSee full schedule: https://khaaliclass.vercel.app/room/${roomId}`;
+      const handleShareTimetable = () => {
+    // 🚀 THE MAGIC TRICK: This dynamically grabs the EXACT URL the user is currently on!
+    const currentUrl = window.location.href;
+    
+    // We inject that dynamic URL right into the message
+    const message = `📚 Check out the ${selectedCohort} weekly timetable on KhaaliClass! \n\nSee full schedule: ${currentUrl}`;
     
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
-  
+
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 relative">
       {/* CUSTOM DROPDOWN BUTTON */}
