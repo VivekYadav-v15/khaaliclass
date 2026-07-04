@@ -1,5 +1,6 @@
 "use client";
 
+import RoomControls from "@/components/RoomControls";
 import { useRouter } from "next/navigation";
 import React, { useState } from 'react';
 
@@ -88,6 +89,9 @@ export default function RoomSchedule({
               <button className="px-3 py-1 text-sm text-zinc-400 hover:text-white transition-colors">Day</button>
             </div>
           </div>
+          {/* 🚀 DROP THE CONTROLS RIGHT HERE! */}
+      <RoomControls roomId={roomName} />
+
 
           <div className="bg-[#18181b] border border-zinc-800 rounded-xl overflow-x-auto">
             <div className="min-w-[800px]">
