@@ -1,3 +1,4 @@
+import { ActiveCRsWidget, UserRegistryClient } from "@/components/DashboardWidgets";
 import AutoRefresh from "@/components/AutoRefresh";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -124,10 +125,7 @@ export default async function AdminDashboard() {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Signed-In Users</p>
           <p className="text-3xl font-bold text-blue-400 mt-1">{allUsers.length}</p>
         </div>
-        <div className="bg-gray-800 border border-gray-700/60 rounded-xl p-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active CRs Upgraded</p>
-          <p className="text-3xl font-bold text-emerald-400 mt-1">{activeCRs.length}</p>
-        </div>
+        <ActiveCRsWidget activeCRs={activeCRs} />
         <div className="bg-gray-800 border border-gray-700/60 rounded-xl p-5 shadow-sm">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending CR Applications</p>
           <p className="text-3xl font-bold text-amber-400 mt-1">{pendingCRs.length}</p>
@@ -180,61 +178,9 @@ export default async function AdminDashboard() {
             </div>
           </section>
 
-          {/* Section B: All Registered Users Registry */}
-          <section className="bg-gray-800 border border-gray-700/50 rounded-xl overflow-hidden shadow-md">
-            <div className="px-5 py-4 bg-gray-800/50 border-b border-gray-700">
-              <h2 className="text-lg font-bold text-white">Campus User Registry</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-700 text-xs text-gray-400 uppercase tracking-wider bg-gray-800/30">
-                    <th className="px-5 py-3 font-semibold">Name / Email</th>
-                    <th className="px-5 py-3 font-semibold">Assigned Badge</th>
-                    <th className="px-5 py-3 font-semibold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700/60 text-sm">
-                  {allUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-700/20 transition-colors">
-                      <td className="px-5 py-3">
-                        <div className="font-medium text-white">{user.name || "System User"}</div>
-                        <div className="text-xs text-gray-400">{user.email}</div>
-                      </td>
-                      <td className="px-5 py-3">
-                        {/* DYNAMIC BADGES */}
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide border uppercase ${
-                          user.role === "ADMIN" ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
-                          user.role === "CR" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                          "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                        }`}>
-                          {user.role || 'STUDENT'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {user.role === "CR" && (
-                          <form action={manageUserRole}>
-                            <input type="hidden" name="userId" value={user.id} />
-                            <button 
-                              type="submit" 
-                              name="action" 
-                              value="DEMOTE_CR" 
-                              className="px-3 py-1.5 text-xs font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition-colors"
-                            >
-                              Demote
-                            </button>
-                          </form>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
+          <UserRegistryClient allUsers={allUsers} manageUserRole={manageUserRole} />
 
-        {/* RIGHT COLUMN: LOGS & AUDITS */}
+        </div> {/* RIGHT COLUMN: LOGS & AUDITS */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           
           {/* 1. Live CR System Audit Trail */}
