@@ -1,10 +1,3 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import AuthProvider from "@/components/AuthProvider"; // 1. Import the provider
-
-const inter = Inter({ subsets: ["latin"] });
-
 // 🚀 UPGRADED SEO METADATA
 export const metadata: Metadata = {
   title: "KhaaliClass | Real-Time Campus Timetables & Empty Rooms",
@@ -17,21 +10,7 @@ export const metadata: Metadata = {
     siteName: "KhaaliClass",
     type: "website",
   },
+  verification: {
+    google: "7B8D6jV02nJTGvqZYpNeZbrmHQb-cdJWfLp-JKC6rdQ",
+  },
 };
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body className={inter.className}>
-        {/* 2. Wrap the children inside AuthProvider */}
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-      </body>
-    </html>
-  );
-}
