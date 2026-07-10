@@ -1,64 +1,58 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { redis } from '@/lib/redis';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Verify this path matches your auth options location!
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    // --- 🛡️ THE BOUNCER STARTS HERE ---
     const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
+    if (!session || !session.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Query the DB directly to check their real role at this exact moment
-    const dbUser = await prisma.user.findUnique({
+    const body = await req.json();
+    // Make sure suggestedStatus matches what your frontend sends!
+    const { roomId, suggestedStatus } = body; 
+
+    // 1. Fetch the user
+    const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { role: true },
     });
 
-    // Kick them out if they are not a CR or ADMIN
-    if (!dbUser || (dbUser.role !== "CR" && dbUser.role !== "ADMIN")) {
-      return NextResponse.json(
-        { error: "Access denied. Your permissions have changed.", roleChanged: true },
-        { status: 403 }
-      );
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    // 2. 🚨 THE GHOSTING PROTOCOL 🚨
+    if (user.trustScore < 20) {
+      await prisma.report.create({
+        data: {
+          roomId: roomId,
+          userId: user.id,
+          status: suggestedStatus || "UNKNOWN", // 👈 FIXED: Required field added back!
+          moderationStatus: "REJECTED",
+          rejectedReason: `Shadow Banned: Trust score too low (${user.trustScore}/100)`
+        }
+      });
+
+      return NextResponse.json({ 
+        success: true, 
+        message: "Thank you! Your report has been submitted." 
+      });
     }
-    // --- 🛡️ THE BOUNCER ENDS HERE ---
 
-    const body = await request.json();
-    const { roomId, status } = body;
-
-    // 1. Basic validation
-    if (!roomId || !status) {
-      return NextResponse.json(
-        { error: 'Missing roomId or status' },
-        { status: 400 }
-      );
-    }
-
-    // 2. Update the room in the database
-    const updatedRoom = await prisma.room.update({
-      where: { id: roomId },
-      data: { status: status },
+    // 3. NORMAL PROTOCOL
+    await prisma.report.create({
+      data: {
+        roomId: roomId,
+        userId: user.id,
+        status: suggestedStatus || "UNKNOWN", // 👈 FIXED: Required field added back!
+        moderationStatus: "PENDING", 
+      }
     });
 
-    // 3. Clear the Redis cache for Block 5 so the new status is visible immediately
-    const keys = await redis.keys('rooms:block5:*');
-    if (keys.length > 0) {
-      await redis.del(...keys);
-      console.log('Cleared Redis cache for Block 5');
-    }
-
-    return NextResponse.json({ success: true, room: updatedRoom }, { status: 200 });
+    return NextResponse.json({ success: true, message: "Report submitted successfully." });
 
   } catch (error) {
-    console.error('Error updating room status:', error);
-    return NextResponse.json(
-      { error: 'Failed to update room status' },
-      { status: 500 }
-    );
+    console.error("Report Submission Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

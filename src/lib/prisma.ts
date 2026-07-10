@@ -15,6 +15,7 @@ const adapter = new PrismaPg(pool);
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 // 4. Instantiate the client with the adapter
+
 export const prisma =
   globalForPrisma.prisma || new PrismaClient({ adapter });
 

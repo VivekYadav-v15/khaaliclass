@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import "./globals.css"; // (or whatever your css imports are)
 
-// 1. Your named export for metadata
+// 1. Your SEO Metadata Object
 export const metadata: Metadata = {
   title: "KhaaliClass | Real-Time Campus Timetables & Empty Rooms",
   description: "Find empty classrooms, navigate the campus map, and track real-time schedules for NSUT Delhi. Built by students, for students.",
@@ -18,12 +17,12 @@ export const metadata: Metadata = {
   },
 };
 
-// 2. Your DEFAULT export for the actual layout component
+// 2. Your Layout Component (Ensure props type is fully defined)
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
       <body>

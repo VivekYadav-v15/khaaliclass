@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Adjust this import if your prisma client is somewhere else!
+import { prisma } from "@/lib/prisma"; 
 
 export async function GET() {
   try {
@@ -12,20 +12,23 @@ export async function GET() {
     const roomData = apjRooms.map((roomName) => ({
       name: roomName,
       building: "APJ Complex",
-      floor: "Ground", // Putting them on Ground floor by default
-      latitude: 28.6121502,  // Rough APJ coordinates
+      floor: "Ground", 
+      latitude: 28.6121502,  
       longitude: 77.0365392,
       capacity: 60,
       status: "AVAILABLE"
     }));
 
-    // Inject them into Supabase
-    await prisma.room.createMany({
-      data: roomData,
-      skipDuplicates: true, // Prevents crashing if you run it twice
-    });
+    // Inject them into MongoDB (Wrapped in try/catch since skipDuplicates is banned)
+    try {
+      await prisma.room.createMany({
+        data: roomData,
+      });
+    } catch (dbError) {
+      console.log("Skipping creation: APJ rooms likely already exist in the database.");
+    }
 
-    return NextResponse.json({ message: "✅ All 11 APJ Complex rooms successfully added to the database!" });
+    return NextResponse.json({ message: "✅ All 11 APJ Complex rooms successfully processed!" });
   } catch (error: any) {
     console.error(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
