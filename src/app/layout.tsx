@@ -1,4 +1,7 @@
-// 🚀 UPGRADED SEO METADATA
+import type { Metadata } from "next";
+import "./globals.css"; // (or whatever your css imports are)
+
+// 1. Your named export for metadata
 export const metadata: Metadata = {
   title: "KhaaliClass | Real-Time Campus Timetables & Empty Rooms",
   description: "Find empty classrooms, navigate the campus map, and track real-time schedules for NSUT Delhi. Built by students, for students.",
@@ -14,3 +17,18 @@ export const metadata: Metadata = {
     google: "7B8D6jV02nJTGvqZYpNeZbrmHQb-cdJWfLp-JKC6rdQ",
   },
 };
+
+// 2. Your DEFAULT export for the actual layout component
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+      </body>
+    </html>
+  );
+}
