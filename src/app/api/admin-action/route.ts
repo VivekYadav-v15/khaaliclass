@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // adjust your import path
-import prisma from "@/lib/prisma"; // adjust based on your ORM
-
+import { prisma } from "@/lib/prisma"; 
 export async function POST(req: Request) {
   try {
     // 1. Get the session (The Cookie)

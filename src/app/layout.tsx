@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Providers from "./Providers"; // Adjust the path if you put it in a components folder!
+import "./globals.css"; // Assuming you have your CSS imported here
 
-// 1. Your SEO Metadata Object
 export const metadata: Metadata = {
   title: "KhaaliClass | Real-Time Campus Timetables & Empty Rooms",
   description: "Find empty classrooms, navigate the campus map, and track real-time schedules for NSUT Delhi. Built by students, for students.",
@@ -17,7 +18,6 @@ export const metadata: Metadata = {
   },
 };
 
-// 2. Your Layout Component (Ensure props type is fully defined)
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

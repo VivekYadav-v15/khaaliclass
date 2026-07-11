@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  // NO URL HERE! Prisma 7 handles it via prisma.config.ts
+  url      = env("DATABASE_URL") 
 }
 
 // --------------------------------------
