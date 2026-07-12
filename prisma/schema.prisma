@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL") 
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // --------------------------------------
@@ -18,17 +19,17 @@ enum Role {
 }
 
 model Account {
-  id                String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String  @db.ObjectId
+  id                String  @id @default(cuid())
+  userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.String // Text is SQL-specific, use String for MongoDB
-  access_token      String? @db.String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.String
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -37,20 +38,20 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       String   @db.ObjectId
+  userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  role          Role      @default(STUDENT) // Fixed Enum mismatch
+  role          Role      @default(STUDENT)
   crRequested   Boolean   @default(false)
   trustScore    Int       @default(100) 
   
@@ -62,7 +63,7 @@ model User {
 }
 
 model VerificationToken {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId // Required for MongoDB
+  id         String   @id @default(cuid())
   identifier String
   token      String   @unique
   expires    DateTime
@@ -75,7 +76,7 @@ model VerificationToken {
 // --------------------------------------
 
 model Room {
-  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  id        String         @id @default(cuid())
   name      String         @unique
   building  String
   latitude  Float
@@ -90,8 +91,8 @@ model Room {
 }
 
 model Schedule {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  roomId    String   @db.ObjectId
+  id        String   @id @default(cuid())
+  roomId    String
   room      Room     @relation(fields: [roomId], references: [id])
   dayOfWeek Int      
   startTime String   
@@ -100,10 +101,10 @@ model Schedule {
 }
 
 model Report {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  roomId           String   @db.ObjectId
+  id               String   @id @default(cuid())
+  roomId           String
   room             Room     @relation(fields: [roomId], references: [id])
-  userId           String   @db.ObjectId
+  userId           String
   status           String   
   trusted          Boolean  @default(false)
   timestamp        DateTime @default(now())
@@ -116,22 +117,22 @@ model Report {
 // --------------------------------------
 
 model RoomOverride {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  roomId    String   @db.ObjectId
+  id        String   @id @default(cuid())
+  roomId    String
   room      Room     @relation(fields: [roomId], references: [id])
   date      DateTime 
   startTime String   
   endTime   String   
   status    String   
   reason    String?  
-  crId      String   @db.ObjectId
+  crId      String
   user      User     @relation(fields: [crId], references: [id])
   createdAt DateTime @default(now())
 }
 
 model AuditLog {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
+  id        String   @id @default(cuid())
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   action    String   
   details   String   
@@ -143,7 +144,7 @@ model AuditLog {
 // ------------------------------------------------------
 
 model CRAuditLog {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   userName    String   
   roomName    String   
   action      String   
@@ -151,7 +152,7 @@ model CRAuditLog {
 }
 
 model StudentSuggestion {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  id              String   @id @default(cuid())
   roomName        String   
   reportedStatus  String   
   distanceMeters  Float    
